@@ -5,7 +5,7 @@ import re
 def normalize_url(url: str) -> str:
     """
     Basic URL normalization:
-      1) Lowercase the scheme and domain.
+      1) Lowercase the scheme and domain. <-- CASE SENSITIVE URLS???
       2) Remove default ports (80 for HTTP, 443 for HTTPS) if present.
       3) Remove trailing slash if present in the path.
       4) Sort query parameters alphabetically (optional).
@@ -13,7 +13,8 @@ def normalize_url(url: str) -> str:
     # Parse the URL
     parsed = urlparse(url)
 
-    # Lowercase scheme and netloc
+    # Lowercase scheme and netloc #THIS MAY BE DETREMENTENTAL
+    # many urls are case sensitive (True?)
     scheme = parsed.scheme.lower()
     netloc = parsed.netloc.lower()
 
