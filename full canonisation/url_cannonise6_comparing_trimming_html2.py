@@ -38,7 +38,7 @@ def canonicalize_url(url: str) -> str:
     # 3) Remove known tracking params if they don't change content
     known_tracking_params = [
         "utm_source", "utm_medium", "utm_campaign",
-        "utm_term", "utm_content", "itm_source",
+        "utm_term", "utm_content", "itm_source", "si",
         # ...
     ]
     q_dict = parse_qs(parsed.query, keep_blank_values=True)
@@ -60,7 +60,7 @@ def canonicalize_url(url: str) -> str:
 
 def main():
     original_url = (
-        "https://fortune.com/2025/01/08/trump-canada-us-merger-51st-state/?itm_source=parsely-api#lepicFrago"
+        "https://youtu.be/Rkuk1XQGHeg?si=wuM-NS5F-ltWu9qH"
     )
 
     print("Original URL:", original_url)
