@@ -54,6 +54,8 @@ def remove_fragment(url: str) -> str:
     parsed = urlparse(url)
     # Remove the fragment by setting it to an empty string
     parsed = parsed._replace(fragment='')
+    # removing queries, MAY BE DETREMENTAL
+    parse = parsed._replace(query='')
     # Reconstruct the URL without the fragment
     url_without_fragment = urlunparse(parsed)
     return url_without_fragment
@@ -84,7 +86,8 @@ def main():
         "https://youtu.be/abc123",
         "http://bit.ly/3kX2Example",
         "https://bit.ly/mbmbam", 
-        "https://www.EXAMPLE.com:443/path/?b=2&a=1#section"
+        "https://www.EXAMPLE.com:443/path/?b=2&a=1#section",
+        "https://fortune.com/2025/01/08/trump-canada-us-merger-51st-state/?itm_source=parsely-api"
     ]
 
     for original_url in test_urls:

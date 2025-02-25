@@ -4,3 +4,5 @@
 
 2 - expand_redirect => be implemented first? may save resources by reducing obsolete proccesses
 => may be essential for content registration?
+
+3 - Comparing end points after each modification of the url => keep continueing untill a different endpoint is reached and then reverting to the previous url that worked
