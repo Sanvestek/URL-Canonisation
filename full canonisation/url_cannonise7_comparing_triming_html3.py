@@ -8,10 +8,11 @@ def fetch_content_signature(url: str, timeout=5):
         status_code = resp.status_code
         soup = BeautifulSoup(resp.text, 'html.parser')
         title = soup.title.string.strip() if soup.title and soup.title.string else ""
-        # If you want to be more certain, do a content hash or parse <link rel="canonical">
-        return (status_code, title)
+        # Include more details about the page content
+        body_text = soup.body.get_text(strip=True) if soup.body else ""
+        return (status_code, title, body_text)
     except requests.RequestException:
-        return (None, "")
+        return (None, "", "")
 
 def pages_equivalent(url_a: str, url_b: str) -> bool:
     sig_a = fetch_content_signature(url_a)
@@ -35,7 +36,18 @@ def canonicalize_url(url: str) -> str:
         if pages_equivalent(url, test_url):
             parsed = test_parsed
 
-    # 3) Remove known tracking params if they don't change content
+    # 3) Remove everything after the last '/' from right to left until content changes
+    path_parts = parsed.path.split('/')
+    for i in range(len(path_parts) - 1, 0, -1):
+        test_path = '/'.join(path_parts[:i])
+        test_parsed = parsed._replace(path=test_path)
+        test_url = urlunparse(test_parsed)
+        if pages_equivalent(url, test_url):
+            parsed = test_parsed
+        else:
+            break
+
+    # 4) Remove all known tracking params and everything after them
     known_tracking_params = [
         "utm_source", "utm_medium", "utm_campaign",
         "utm_term", "utm_content", "itm_source", "si", "originalSubdomain", "trackingId", "refId", "midToken", "trkEmail", "otpToken",
@@ -43,17 +55,29 @@ def canonicalize_url(url: str) -> str:
         # ...
     ]
     q_dict = parse_qs(parsed.query, keep_blank_values=True)
+    removed_params = {}
 
     for param in known_tracking_params:
         if param in q_dict:
-            removed_val = q_dict.pop(param)
+            removed_params[param] = q_dict.pop(param)
+            break  # Stop after removing the first known tracking parameter
+
+    # Remove everything after the first known tracking parameter
+    test_query = urlencode(q_dict, doseq=True)
+    test_parsed = parsed._replace(query=test_query)
+    test_url = urlunparse(test_parsed)
+
+    # 5) Check if content changes after removing all tracking params
+    if not pages_equivalent(url, test_url):
+        # Restore parameters one by one if content changes
+        for param, value in removed_params.items():
+            q_dict[param] = value
             test_query = urlencode(q_dict, doseq=True)
             test_parsed = parsed._replace(query=test_query)
             test_url = urlunparse(test_parsed)
 
-            if not pages_equivalent(url, test_url):
-                # If removing it changes the content, restore it
-                q_dict[param] = removed_val
+            if pages_equivalent(url, test_url):
+                q_dict.pop(param)
 
     final_query = urlencode(q_dict, doseq=True)
     final_parsed = parsed._replace(query=final_query)
